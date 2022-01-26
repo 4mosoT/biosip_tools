@@ -4,6 +4,7 @@ from biosip_tools.eeg import EEG_BANDS
 
 
 class EEGSeries():
+ 
     def __init__(self, path: str, sample_rate: int = 500) -> None:
         """Class for EEG time series.
         
@@ -22,8 +23,6 @@ class EEGSeries():
         :type l_freq: float
         :param h_freq: Upper pass-band edge.
         :type h_freq: float
-        :param sample_rate: Sample rate, defaults to 500
-        :type sample_rate: int, optional
         :return: Filtered data
         :rtype: np.array
         """
