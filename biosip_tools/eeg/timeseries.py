@@ -6,7 +6,7 @@ from biosip_tools.eeg import EEG_BANDS
 class EEGSeries():
     def __init__(self, path: str, sample_rate: int = 500) -> None:
         """Class for EEG time series.
-
+        
         :param path: Path to .npy array. Expected shape is (n_subjects, n_channels, n_samples)
         :type path: str
         :param sample_rate: [description], defaults to 500
@@ -17,6 +17,7 @@ class EEGSeries():
 
     def filter(self, l_freq: float, h_freq: float,  verbose=False, **kwargs) -> np.array:
         """Apply a FIR filter to the EEG data. Accepts arguments for mne.filter.filter_data.
+
         :param l_freq: Lower pass-band edge.
         :type l_freq: float
         :param h_freq: Upper pass-band edge.
