@@ -1,2 +1,2 @@
 ## Biopsip Tools
-https://biosip-tools.readthedocs.io/en/latest/
+https://biosip-tools.readthedocs.io
