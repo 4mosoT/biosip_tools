@@ -4,22 +4,6 @@ biosip\_tools.eeg package
 Submodules
 ----------
 
-biosip\_tools.eeg.data\_load module
------------------------------------
-
-.. automodule:: biosip_tools.eeg.data_load
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-biosip\_tools.eeg.preprocessing module
---------------------------------------
-
-.. automodule:: biosip_tools.eeg.preprocessing
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 biosip\_tools.eeg.timeseries module
 -----------------------------------
 
