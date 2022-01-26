@@ -15,7 +15,7 @@ class EEGSeries():
         self.data = np.load(path)
         self.sample_rate = sample_rate
 
-    def filter_eeg(self, l_freq: float, h_freq: float,  verbose=False, **kwargs) -> np.array:
+    def filter(self, l_freq: float, h_freq: float,  verbose=False, **kwargs) -> np.array:
         """Apply a FIR filter to the EEG data. Accepts arguments for mne.filter.filter_data.
         :param l_freq: Lower pass-band edge.
         :type l_freq: float
@@ -28,10 +28,11 @@ class EEGSeries():
         """
         return mne.filter.filter_data(self.data, self.sample_rate, l_freq, h_freq, verbose=verbose, **kwargs)
 
-    def filter_bands(self, **kwargs) -> list:
-        """Return a list of filtered EEG data. Each element is a tuple of the band name and the filtered data.
+    def filter_bands(self, **kwargs) -> dict:
+        """Return a dictionary of filtered EEG data. 
 
-        :return: List of filtered EEG data
-        :rtype: list
+        :return: Dictionary of filtered data. {band_name: data}
+        :rtype: dict
         """
-        return [(band, self.filter_eeg(self.data, value[0], value[1], **kwargs)) for band, value in EEG_BANDS.items()]
+        return {band_name: self.filter(band_range[0], band_range[1], **kwargs) for band_name, band_range in EEG_BANDS.items()}
+
