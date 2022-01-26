@@ -1,0 +1,8 @@
+.vscode
+__pycache__/
+dist/
+docs/build
+src/*.egg-info
+build_package.sh
+crear_sphinx.sh
+Biosip_Tools.egg-info/
