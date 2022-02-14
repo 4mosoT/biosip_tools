@@ -2,7 +2,7 @@ from .timeseries import EEGSeries
 import numpy as np
 
 
-def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float = 1, infinity: bool = False, labels: np.ndarray = None, epochs=1, shuffle: bool = False, return_subjects=False) -> tuple:
+def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float = 1, infinity: bool = False, labels: np.ndarray = None, epochs=1, shuffle: bool = False, return_subjects=False, stride: float = None) -> tuple:
     """[summary]
 
     :param eegs: [description]
@@ -21,21 +21,23 @@ def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float
     :type shuffle: bool, optional
     :param return_subjects: batch size correspond to number of windows per subject, defaults to False
     :type return_subjects: bool, optional
+    :param stride: stride in seconds, defaults to None
+    :type stride: float, optional
     :yield: batch and labels if labels are provided
     :rtype: tuple
     """
 
-    # TODO: Implement overlapping (stride)
 
     window_sample = int(window_size * eegs.sample_rate)
-    n_windows = int(np.floor(eegs.data.shape[2] / window_sample))
-    trim_to_fit = eegs.data.shape[2] % window_sample
-    #print("Removing {} samples from the start of the data".format(trim_to_fit))
-    data = eegs.data[:, :, trim_to_fit:].reshape(
-        *eegs.data.shape[:2], n_windows, -1)
+    data = np.lib.stride_tricks.sliding_window_view(eegs.data, window_sample, axis=-1)
+    if stride is not None:
+        data = data[:,:,:: int(eegs.sample_rate * stride),:] 
+    else:
+        data = data[:,:,::window_sample,:]
     data = data.reshape(-1, data.shape[1], data.shape[-1])
+
     if return_subjects:
-        batch_size = n_windows
+        batch_size = data.shape[0] // eegs.data.shape[0]
 
     if labels is not None:
         new_labels = np.repeat(labels, data.shape[0] // eegs.data.shape[0])
