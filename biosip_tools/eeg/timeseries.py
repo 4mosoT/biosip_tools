@@ -1,12 +1,14 @@
+from operator import sub
 import numpy as np
 import mne
 from scipy import signal
 import matplotlib.pyplot as plt
 from .constants import EEG_BANDS
+import ast
 
 class EEGSeries():
 
-    def __init__(self, data: np.ndarray = None, path: str = None, sample_rate: int = 500) -> None:
+    def __init__(self, data: np.ndarray = None, path: str = None, sample_rate: int = 500, subjects_info: str = None) -> None:
         """Class for EEG time series.
 
         :param data: EEG data.
@@ -15,11 +17,19 @@ class EEGSeries():
         :type path: str
         :param sample_rate: sample rate, defaults to 500
         :type sample_rate: int, optional
+        :param subjects_info: path to subjects txt file
+        :type subjects_info: str, defaults to None
         """
         assert(data is not None or path is not None)
         self.data = np.load(path) if path is not None else data
         assert(len(self.data.shape) == 3)
         self.sample_rate = sample_rate
+        self.subjects_order = None
+
+        if subjects_info is not None:
+            with open(subjects_info, 'r') as f:
+                self.subjects_order = [x[:3]+"_"+x[-5] for x in ast.literal_eval(f.read())]
+
 
     def apply_cheby_filter(self, lowcut: float, highcut: float, order: int=6, rs: float=40, plot_response=False):
         """Apply a Chebyshev II filter to the EEG data.
@@ -68,6 +78,25 @@ class EEGSeries():
         :rtype: EEGSeries
         """
         return EEGSeries(data=mne.filter.filter_data(self.data, self.sample_rate, l_freq, h_freq, verbose=verbose, **kwargs))
+    
+    def clip_and_normalize(self, n_deviations: int = 3):
+        """Clip and normalize the EEG data.
+
+        :param n_deviations: Number of standard deviations to clip at, defaults to 3
+        :type n_deviations: int, optional
+        :return: Normalized data
+        :rtype: EEGSeries
+        """
+        shape = self.data.shape
+        p = self.data.reshape(-1, shape[-1])
+
+        for index, x in enumerate(p):
+            m = np.mean(x)
+            s = np.std(x)
+            x = np.clip(x, m - n_deviations * s, m + n_deviations * s)
+            p[index] = (x - x.min()) / (x.max() - x.min())
+
+        return EEGSeries(data=p.reshape(shape))
 
     def fir_filter_bands(self, **kwargs) -> dict:
         """Return a dictionary of filtered EEG data. 
@@ -91,7 +120,7 @@ class EEGSeries():
         :param new_data: Data to append.
         :type new_data: EEGSeries
         """
-        return EEGSeries(data = np.append(self.data, new_data.data, axis=0))
+        return self(data = np.append(self.data, new_data.data, axis=0))
 
     def __iter__(self):
         return iter(self.data)

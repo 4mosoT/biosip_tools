@@ -1,10 +1,11 @@
 from .timeseries import EEGSeries
 import numpy as np
 
+# TODO: add to return index
+
 
 def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float = 1, infinity: bool = False, labels: np.ndarray = None, epochs=1, shuffle: bool = False, return_subjects=False, stride: float = None) -> tuple:
-    """[summary]
-
+    """[summary]    
     :param eegs: [description]
     :type eegs: EEGSeries
     :param batch_size: batch size, defaults to 32
@@ -39,6 +40,7 @@ def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float
     if return_subjects:
         batch_size = data.shape[0] // eegs.data.shape[0]
 
+
     if labels is not None:
         new_labels = np.repeat(labels, data.shape[0] // eegs.data.shape[0])
 
@@ -54,11 +56,13 @@ def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float
 
         while done_epoch is None:
             data_batch = data[batch_number *
-                                batch_size:(batch_number + 1) * batch_size]
+                              batch_size:(batch_number + 1) * batch_size]
             if labels is not None:
                 label_batch = new_labels[batch_number *
-                                            batch_size:(batch_number + 1) * batch_size]
+                                         batch_size:(batch_number + 1) * batch_size]
             batch_number += 1
-            if batch_number  * batch_size >= data.shape[0]:
+            if batch_number * batch_size >= data.shape[0]:
                 done_epoch = epoch
             yield data_batch, label_batch if labels is not None else None, done_epoch
+
+
