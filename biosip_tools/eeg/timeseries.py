@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from .constants import EEG_BANDS
 import ast
 
+
 class EEGSeries():
 
     def __init__(self, data: np.ndarray = None, path: str = None, sample_rate: int = 500, subjects_info: str = None) -> None:
@@ -20,18 +21,22 @@ class EEGSeries():
         :param subjects_info: path to subjects txt file
         :type subjects_info: str, defaults to None
         """
-        assert(data is not None or path is not None)
+        assert (data is not None or path is not None)
         self.data = np.load(path) if path is not None else data
-        assert(len(self.data.shape) == 3)
+        assert (len(self.data.shape) == 3)
         self.sample_rate = sample_rate
         self.subjects_order = None
 
         if subjects_info is not None:
             with open(subjects_info, 'r') as f:
-                self.subjects_order = [x[:3]+"_"+x[-5] for x in ast.literal_eval(f.read())]
+                self.subjects_order = [x[:3]+"_"+x[-5]
+                                       for x in ast.literal_eval(f.read())]
+        self.shape = self.data.shape
 
+    def __getitem__(self, key):
+        return self.data[key]
 
-    def apply_cheby_filter(self, lowcut: float, highcut: float, order: int=6, rs: float=40, plot_response=False):
+    def apply_cheby_filter(self, lowcut: float, highcut: float, order: int = 6, rs: float = 40, plot_response=False):
         """Apply a Chebyshev II filter to the EEG data.
 
         :param lowcut: Lower pass-band edge.
@@ -47,7 +52,6 @@ class EEGSeries():
         :return: Filtered data
         :rtype: EEGSeries
         """
-
 
         nyq = 0.5 * self.sample_rate
         low = lowcut / nyq
@@ -67,7 +71,7 @@ class EEGSeries():
             plt.show()
         return EEGSeries(data=signal.sosfilt(sos, self.data))
 
-    def fir_filter(self, l_freq: float, h_freq: float,  verbose=False, **kwargs) -> np.ndarray:
+    def fir_filter(self, l_freq: float, h_freq: float, verbose=False, **kwargs) -> np.ndarray:
         """Apply a FIR filter to the EEG data. Accepts arguments for mne.filter.filter_data.
 
         :param l_freq: Lower pass-band edge.
@@ -78,7 +82,7 @@ class EEGSeries():
         :rtype: EEGSeries
         """
         return EEGSeries(data=mne.filter.filter_data(self.data, self.sample_rate, l_freq, h_freq, verbose=verbose, **kwargs))
-    
+
     def clip_and_normalize(self, n_deviations: int = 3):
         """Clip and normalize the EEG data.
 
@@ -120,9 +124,7 @@ class EEGSeries():
         :param new_data: Data to append.
         :type new_data: EEGSeries
         """
-        return self(data = np.append(self.data, new_data.data, axis=0))
+        return self(data=np.append(self.data, new_data.data, axis=0))
 
     def __iter__(self):
         return iter(self.data)
-
-

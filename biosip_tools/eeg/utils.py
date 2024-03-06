@@ -4,7 +4,7 @@ import numpy as np
 # TODO: add to return index
 
 
-def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float = 1, infinity: bool = False, labels: np.ndarray = None, epochs=1, shuffle: bool = False, return_subjects=False, stride: float = None) -> tuple:
+def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float = 1, infinity: bool = False, labels: np.ndarray = None, epochs=1, shuffle: bool = False, return_subjects=False, stride: float = None, overlap: float = None) -> tuple:
     """[summary]    
     :param eegs: [description]
     :type eegs: EEGSeries
@@ -24,6 +24,8 @@ def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float
     :type return_subjects: bool, optional
     :param stride: stride in seconds, defaults to None
     :type stride: float, optional
+    :param overlap: overlap between windows, defaults to None
+    :type overlap: float, optional
     :yield: batch and labels if labels are provided
     :rtype: tuple
     """
@@ -33,6 +35,9 @@ def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float
         eegs.data, window_sample, axis=-1)
     if stride is not None:
         data = data[:, :, :: int(eegs.sample_rate * stride), :]
+    elif overlap is not None:
+        data = data[:, :, :: int(
+            eegs.sample_rate * window_size * (1 - overlap)), :]
     else:
         data = data[:, :, ::window_sample, :]
     data = data.reshape(-1, data.shape[1], data.shape[-1])
@@ -40,11 +45,11 @@ def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float
     if return_subjects:
         batch_size = data.shape[0] // eegs.data.shape[0]
 
-
     if labels is not None:
         new_labels = np.repeat(labels, data.shape[0] // eegs.data.shape[0])
 
-    for epoch in range(epochs):
+    epoch = 0
+    while True:
         done_epoch = None
         batch_number = 0
 
@@ -63,6 +68,8 @@ def window_data_loader(eegs: EEGSeries, batch_size: int = 32, window_size: float
             batch_number += 1
             if batch_number * batch_size >= data.shape[0]:
                 done_epoch = epoch
+                epoch += 1
             yield data_batch, label_batch if labels is not None else None, done_epoch
-
-
+        if not infinity and epoch >= epochs:
+            break
+        
